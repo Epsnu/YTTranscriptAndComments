@@ -1,22 +1,15 @@
-from youtube_transcript_api import YouTubeTranscriptApi
+from utils import ensure_transcript
 from datetime import date
+from pathlib import Path
 
-def get_transcript(video_id):
-    try:
-        ytt_api = YouTubeTranscriptApi()
-        transcript = ytt_api.fetch(video_id)
+def get_transcript(transcript, video_id):
+    transcript = ensure_transcript(transcript, video_id)
 
-        transcript_str = ""
+    print_transcript(transcript)
 
-        for line in transcript:
-            transcript_str += line.text + " "
+    save_transcript(transcript)
 
-        print_transcript(transcript_str)
-
-        save_transcript(transcript_str)
-
-    except Exception as e:
-        print("Error fetching transcript:", str(e))
+    return transcript
 
 def print_transcript(transcript):
     print("Would you like to see the transcript now? (y/n)")
@@ -26,11 +19,15 @@ def print_transcript(transcript):
 
 def save_transcript(transcript):
     print("Would you like to save the transcript to your downloads folder? (y/n)")
-    today = date.today()
-    outFile = f"C:/Users/tobia/Downloads/transcript_{today}.txt"
-    choice = input().lower()
-    if choice == "y":
-        with open(outFile, "w", encoding="utf-8") as f:
-            f.write(transcript)
-            f.write("\n\n-----------END OF TRANSCRIPT-----------\n\n")
-        print(f"Transcript saved to {outFile}")
+    try:
+        today = date.today()
+        outFile = Path.home() / f"Downloads/transcript_{today}.txt"
+        choice = input().lower()
+        if choice == "y":
+            with open(outFile, "w", encoding="utf-8") as f:
+                f.write("\n\n-----------BEGIN TRANSCRIPT-----------\n\n")
+                f.write(transcript)
+                f.write("\n\n-----------END TRANSCRIPT-----------\n\n")
+            print(f"Transcript saved to {outFile}")
+    except Exception as e:
+        print("Error saving transcript:", str(e))
