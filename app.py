@@ -529,7 +529,9 @@ def render_dashboard():
 def main():
     configure_page()
     initialize_state()
-    ensure_api_key()
+    if not ("api_key" in st.session_state and st.session_state.api_key):
+        ensure_api_key()
+        return
     render_sidebar()
     render_header()
     render_dashboard()
