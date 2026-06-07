@@ -2,6 +2,7 @@ from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_comment_downloader import YoutubeCommentDownloader
 from google import genai
 import os
+import streamlit as st
 
 def comments_string(comments):
     comments_str = "\n------\n".join([
@@ -46,7 +47,7 @@ def ensure_comments_summary(comments, comments_summary):
             content = '''
                 Summarize people's reactions and discussions in this YouTube video's comments section in one or two sentences. Add another line listing common jokes, sayings, or themes used throughout. Do not include emojis. Output should be formatted as Markdown. Use Markdown to present your output nicely. Comments delimited by "\n------\n":\n
                 ''' + comments_string(comments)
-            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+            client = genai.Client(api_key=st.session_state.api_key)
             response = client.models.generate_content(
                 model="gemini-flash-lite-latest",
                 contents=content
@@ -63,7 +64,7 @@ def ensure_transcript_summary(transcript, transcript_summary):
             content = '''
                 Summarize the YouTube video given its transcript. Do not include emojis. Aim to make a summary under 10 percent of the transcript length, unless transcript is reasonably short. Output should be formatted as Markdown. Use Markdown to present your output nicely. Transcript:\n
                 ''' + transcript
-            client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+            client = genai.Client(api_key=st.session_state.api_key)
             response = client.models.generate_content(
                 model="gemini-flash-lite-latest",
                 contents=content

@@ -16,6 +16,42 @@ load_dotenv()
 
 PAGE_TITLE = "YouTube Video Info"
 
+def ensure_api_key():
+    if "api_key" in st.session_state and st.session_state.api_key:
+        return
+
+    with st.container():
+        st.markdown(
+            """
+            <div style="
+                padding: 1.5rem;
+                background: #ffffff;
+                border: 2px solid #d0d7e2;
+                border-radius: 10px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+                max-width: 420px;
+                margin: 3rem auto;
+                text-align: center;
+            ">
+                <h3 style="margin-bottom: 0.5rem;">Enter Your Gemini API Key</h3>
+                <p style="color: #555; margin-bottom: 1rem;">
+                    This key is stored only in your browser and never sent to the server.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        api_key = st.text_input(
+            "Enter Gemini API key",
+            type="password",
+            placeholder="xJ.aLeq...",
+            key="api_key_input"
+        )
+        if api_key:
+            st.session_state.api_key = api_key
+            st.success("API key saved in your browser.")
+            st.rerun()
+    st.stop()
 
 def configure_page():
     st.set_page_config(
@@ -493,6 +529,7 @@ def render_dashboard():
 def main():
     configure_page()
     initialize_state()
+    ensure_api_key()
     render_sidebar()
     render_header()
     render_dashboard()
