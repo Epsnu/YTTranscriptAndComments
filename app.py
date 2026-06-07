@@ -1,4 +1,8 @@
+import os
+
 from dotenv import load_dotenv
+from dotenv import set_key
+from google import genai
 from pytube import extract
 from html import escape
 import streamlit as st
@@ -15,9 +19,34 @@ load_dotenv()
 
 
 PAGE_TITLE = "YouTube Video Info"
+ENV_FILE = ".env"
+API_KEY_ENV_VAR = "GEMINI_API_KEY"
+
+
+def get_saved_api_key():
+    saved_api_key = os.getenv(API_KEY_ENV_VAR, "").strip()
+    return saved_api_key or ""
+
+
+def persist_api_key(api_key):
+    api_key = api_key.strip()
+    if not api_key:
+        return
+
+    set_key(ENV_FILE, API_KEY_ENV_VAR, api_key)
+    os.environ[API_KEY_ENV_VAR] = api_key
+    st.session_state.api_key = api_key
+
+
+def verify_api_key(api_key):
+    client = genai.Client(api_key=api_key)
+    client.models.generate_content(
+        model="gemini-flash-lite-latest",
+        contents="Reply with OK.",
+    )
 
 def ensure_api_key():
-    if "api_key" in st.session_state and st.session_state.api_key:
+    if st.session_state.get("api_key"):
         return
 
     with st.container():
@@ -35,22 +64,34 @@ def ensure_api_key():
             ">
                 <h3 style="margin-bottom: 0.5rem;">Enter Your Gemini API Key</h3>
                 <p style="color: #555; margin-bottom: 1rem;">
-                    This key is stored only in your browser and never sent to the server.
+                    This key is stored locally in your project `.env` file and never sent anywhere except Gemini.
                 </p>
             </div>
             """,
             unsafe_allow_html=True
         )
-        api_key = st.text_input(
-            "Enter Gemini API key",
-            type="password",
-            placeholder="xJ.aLeq...",
-            key="api_key_input"
-        )
-        if api_key:
-            st.session_state.api_key = api_key
-            st.success("API key saved in your browser.")
-            st.rerun()
+        with st.form("api_key_form"):
+            api_key = st.text_input(
+                "Enter Gemini API key",
+                type="password",
+                placeholder="xJ.aLeq...",
+                key="api_key_input",
+            )
+            submitted = st.form_submit_button("Save API key")
+
+        if submitted:
+            if api_key.strip():
+                with st.spinner("Verifying API key..."):
+                    try:
+                        verify_api_key(api_key)
+                    except Exception as exc:
+                        st.error(f"API key verification failed: {exc}")
+                    else:
+                        persist_api_key(api_key)
+                        st.success("API key saved locally. You should not be prompted again.")
+                        st.rerun()
+            else:
+                st.error("Please enter a valid API key.")
     st.stop()
 
 def configure_page():
@@ -188,6 +229,7 @@ def configure_page():
 
 def initialize_state():
     defaults = {
+        "api_key": get_saved_api_key(),
         "video_url": "",
         "video_id": None,
         "transcript_loaded_video_id": None,
