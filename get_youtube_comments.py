@@ -5,9 +5,9 @@ from pathlib import Path
 def get_comments(comments, video_id):
     comments = ensure_comments(comments, video_id)
 
-    print_comments(comments)
+    # print_comments(comments)
 
-    save_comments(comments)
+    # save_comments(comments)
 
     return comments
 

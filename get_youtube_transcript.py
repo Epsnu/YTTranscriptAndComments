@@ -5,9 +5,9 @@ from pathlib import Path
 def get_transcript(transcript, video_id):
     transcript = ensure_transcript(transcript, video_id)
 
-    print_transcript(transcript)
+    # print_transcript(transcript)
 
-    save_transcript(transcript)
+    # save_transcript(transcript)
 
     return transcript
 

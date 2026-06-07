@@ -27,7 +27,7 @@ def ensure_comments(comments, video_id):
             ytt_api = YoutubeCommentDownloader()
             comments = ytt_api.get_comments(video_id)
 
-            comments_str = "\n--------------------------\n".join([comment['text'].strip() for comment in comments])
+            comments_str = "\n\n".join([comment['text'].strip() for comment in comments])
             
             return comments_str
 
