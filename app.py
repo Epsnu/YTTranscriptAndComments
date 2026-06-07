@@ -10,28 +10,30 @@ load_dotenv()
 
 def reset():
     video_url = st.text_input("What YouTube video do you want to learn about?", placeholder="YouTube Video URL")
-    video_id = extract.video_id(video_url)
-    transcript = "--N/A--"
-    comments = "--N/A--"
-    transcript_summary = "--N/A--"
-    comments_summary = "--N/A--"
+    video_id = None
+    try:
+        video_id = extract.video_id(video_url)
+    except Exception:
+        pass
+    transcript = None
+    comments = None
+    transcript_summary = None
+    comments_summary = None
     return video_id, transcript, comments, transcript_summary, comments_summary
 
 def main():
     video_id, transcript, comments, transcript_summary, comments_summary = reset()
-
-    with st.expander("Summary"):
-        transcript, transcript_summary = get_transcript_summary(transcript, transcript_summary, video_id)
-        st.write(transcript_summary)
-    with st.expander("Transcript"):
-        transcript, transcript_summary = get_transcript_summary(transcript, transcript_summary, video_id)
-        st.write(transcript)
-    with st.expander("Comments Summary"):
-        comments, comments_summary = get_comments_summary(comments, comments_summary, video_id)
-        st.write(comments_summary)
-    with st.expander("Comments"):
-        comments = get_comments(comments, video_id)
-        st.write(comments)
+    if video_id is None:
+        st.write("Waiting on valid YouTube URL")
+    else:
+        with st.expander("Summary"):
+            transcript, transcript_summary = get_transcript_summary(transcript, transcript_summary, video_id)
+        with st.expander("Transcript"):
+            transcript = get_transcript(transcript, video_id)
+        with st.expander("Comments Summary"):
+            comments, comments_summary = get_comments_summary(comments, comments_summary, video_id)
+        with st.expander("Comments"):
+            comments = get_comments(comments, video_id)
 
 if __name__ == "__main__":
     main()

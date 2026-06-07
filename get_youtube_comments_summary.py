@@ -1,47 +1,28 @@
-from google import genai
 from utils import ensure_comments
+from utils import ensure_comments_summary
 from datetime import date
-from pathlib import Path
-import os
+import streamlit as st
 
 def get_comments_summary(comments, comments_summary, video_id):
     comments = ensure_comments(comments, video_id)
 
-    if comments_summary == "--N/A--":
-        # get summary using gemini latest flash-lite model
-        content = '''
-            Summarize people's reactions and discussions in this YouTube video's comments section in one or two sentences. Add another line listing common jokes, sayings, or themes used throughout. Do not include emojis. Don't use many special characters unless they are part of the "inside jokes" or "motifs" summary. Comments:\n
-            ''' + comments
-        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-        response = client.models.generate_content(
-            model="gemini-flash-lite-latest",
-            contents=content
-        )
-        summary_str = response.text
-    else:
-        summary_str = comments_summary
+    comments_summary = ensure_comments_summary(comments, comments_summary)
 
-    # print_summary(summary_str)
+    save_summary(comments_summary)
 
-    # save_summary(summary_str)
+    print_summary(comments_summary)
 
-    return comments, summary_str
+    return comments, comments_summary
 
-def print_summary(transcript):
-    print("Summary of YouTube Comments:\n")
-    print(transcript, "\n\n")
+def print_summary(summary):
+    st.write(summary)
 
 def save_summary(summary):
-    print("Would you like to save the summary to your downloads folder? (y/n)")
-    try:
-        today = date.today()
-        outFile = Path.home() / f"Downloads/comments_summary_{today}.txt"
-        choice = input().lower()
-        if choice == "y":
-            with open(outFile, "w", encoding="utf-8") as f:
-                f.write("\n\n-----------BEGIN SUMMARY-----------\n\n")
-                f.write(summary)
-                f.write("\n\n-----------END SUMMARY-----------\n\n")
-            print(f"Summary saved to {outFile}")
-    except Exception as e:
-        print("Error saving summary:", str(e))
+    today = date.today()
+    outFile = f"comments_summary_{today}.md"
+    st.download_button(
+        "Download Comments Summary",
+        data=summary,
+        file_name=outFile,
+        key="download-comments-summary"
+    )

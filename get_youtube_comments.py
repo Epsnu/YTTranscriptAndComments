@@ -1,30 +1,29 @@
 from utils import ensure_comments
+from utils import comments_string
 from datetime import date
-from pathlib import Path
+import streamlit as st
 
 def get_comments(comments, video_id):
     comments = ensure_comments(comments, video_id)
 
-    # print_comments(comments)
+    save_comments(comments)
 
-    # save_comments(comments)
+    print_comments(comments)
 
     return comments
 
 def print_comments(comments):
-    print("Would you like to see the comments now? (y/n)")
-    choice = input().lower()
-    if choice == "y":
-        print(comments, "\n\n")
+    for comment in comments:
+        st.divider()
+        st.write(comment["text"].strip())
+    st.divider()
 
 def save_comments(comments):
-    print("Would you like to save the comments to your downloads folder? (y/n)")
     today = date.today()
-    outFile = Path.home() / f"Downloads/comments_{today}.txt"
-    choice = input().lower()
-    if choice == "y":
-        with open(outFile, "w", encoding="utf-8") as f:
-            f.write("\n\n-----------BEGIN COMMENTS-----------\n\n")
-            f.write(comments)
-            f.write("\n\n-----------END COMMENTS-----------\n\n")
-        print(f"Comments saved to {outFile}")
+    outFile = f"comments_{today}.txt"
+    st.download_button(
+        "Download Comments",
+        data=comments_string(comments),
+        file_name=outFile,
+        key="download-comments"
+    )
