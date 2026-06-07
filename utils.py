@@ -4,7 +4,10 @@ from google import genai
 import os
 
 def comments_string(comments):
-    comments_str = "\n------\n".join([comment['text'].strip() for comment in comments])
+    comments_str = "\n------\n".join([
+        comment.get("text", "").strip() if isinstance(comment, dict) else str(comment).strip()
+        for comment in comments
+    ])
     return comments_str
 
 # Ensures transcript has been gotten

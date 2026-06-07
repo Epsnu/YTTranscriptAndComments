@@ -4,3 +4,4 @@ datetime
 pytube
 google-genai
 python-dotenv
+streamlit
