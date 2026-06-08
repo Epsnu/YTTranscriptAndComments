@@ -5,3 +5,5 @@ pytube
 google-genai
 python-dotenv
 streamlit
+gspread
+google-auth
