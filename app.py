@@ -1,11 +1,12 @@
 import os
-
 from dotenv import load_dotenv
 from dotenv import set_key
 from google import genai
 from pytube import extract
 from html import escape
 import streamlit as st
+from feedback import submit_feedback
+from feedback import get_feedback
 
 from utils import (
     comments_string,
@@ -24,75 +25,12 @@ API_KEY_ENV_VAR = "GEMINI_API_KEY"
 
 
 def get_saved_api_key():
-    saved_api_key = os.getenv(API_KEY_ENV_VAR, "").strip()
+    try:
+        saved_api_key = st.secrets["gemini"]["api_key"]
+    except Exception:
+        saved_api_key = os.getenv(API_KEY_ENV_VAR, "")
     return saved_api_key or ""
 
-
-def persist_api_key(api_key):
-    api_key = api_key.strip()
-    if not api_key:
-        return
-
-    set_key(ENV_FILE, API_KEY_ENV_VAR, api_key)
-    os.environ[API_KEY_ENV_VAR] = api_key
-    st.session_state.api_key = api_key
-
-
-def verify_api_key(api_key):
-    client = genai.Client(api_key=api_key)
-    client.models.generate_content(
-        model="gemini-flash-lite-latest",
-        contents="Reply with OK.",
-    )
-
-def ensure_api_key():
-    if st.session_state.get("api_key"):
-        return
-
-    with st.container():
-        st.markdown(
-            """
-            <div style="
-                padding: 1.5rem;
-                background: #ffffff;
-                border: 2px solid #d0d7e2;
-                border-radius: 10px;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-                max-width: 420px;
-                margin: 3rem auto;
-                text-align: center;
-            ">
-                <h3 style="margin-bottom: 0.5rem;">Enter Your Gemini API Key</h3>
-                <p style="color: #555; margin-bottom: 1rem;">
-                    This key is stored locally in your project `.env` file and never sent anywhere except Gemini.
-                </p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-        with st.form("api_key_form"):
-            api_key = st.text_input(
-                "Enter Gemini API key",
-                type="password",
-                placeholder="xJ.aLeq...",
-                key="api_key_input",
-            )
-            submitted = st.form_submit_button("Save API key")
-
-        if submitted:
-            if api_key.strip():
-                with st.spinner("Verifying API key..."):
-                    try:
-                        verify_api_key(api_key)
-                    except Exception as exc:
-                        st.error(f"API key verification failed: {exc}")
-                    else:
-                        persist_api_key(api_key)
-                        st.success("API key saved locally. You should not be prompted again.")
-                        st.rerun()
-            else:
-                st.error("Please enter a valid API key.")
-    st.stop()
 
 def configure_page():
     st.set_page_config(
@@ -315,13 +253,46 @@ def render_sidebar():
         else:
             st.session_state.video_url = video_url
 
-        st.divider()
-        st.caption("Local dashboard")
-        st.write("Double-click `run_app.bat` to launch this screen.")
-
         if st.button("Clear current video", use_container_width=True):
             reset_video_state("", None)
             st.rerun()
+        st.divider()
+
+        render_feedback_safe()
+
+
+def render_feedback():
+    st.header("Feedback")
+    feedback_text = st.text_area("Give me some feedback!")
+    if st.button("Submit"):
+        if feedback_text.strip():
+            submit_feedback(feedback_text)
+            st.success("Thanks for your feedback!")
+        else:
+            st.warning("Enter something my guy.")
+    st.subheader("Recent Feedback")
+    for row in get_feedback():
+        st.write(f"*{row['timestamp']}* — {row['message']}")
+
+
+def render_feedback_safe():
+    st.header("Feedback")
+    feedback_text = st.text_area("Give me some feedback!", key="feedback_text")
+    if st.button("Submit feedback", key="submit_feedback_button"):
+        if feedback_text.strip():
+            submit_feedback(feedback_text)
+            st.success("Thanks for your feedback!")
+        else:
+            st.warning("Enter something my guy.")
+    st.subheader("Recent Feedback")
+    try:
+        feedback_rows = get_feedback()
+    except Exception:
+        st.caption("Feedback requires valid Google Sheets credentials.")
+        return
+
+    for row in feedback_rows:
+        st.write(f"*{row['timestamp']}* - {row['message']}")
 
 
 def fetch_transcript():
@@ -571,9 +542,6 @@ def render_dashboard():
 def main():
     configure_page()
     initialize_state()
-    if not ("api_key" in st.session_state and st.session_state.api_key):
-        ensure_api_key()
-        return
     render_sidebar()
     render_header()
     render_dashboard()
