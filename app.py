@@ -239,19 +239,20 @@ def render_sidebar():
         video_url = st.text_input(
             "YouTube URL",
             value=st.session_state.video_url,
-            placeholder="https://www.youtube.com/watch?v=...",
+            placeholder="https://www.youtube.com/watch?v=..."
         )
 
-        video_id = parse_video_url(video_url)
-        if video_url and video_id is None:
-            st.error("Enter a valid YouTube URL.")
-        elif video_id:
-            st.success("Video ready.")
+        if st.button("Submit", use_container_width=True):
+            video_id = parse_video_url(video_url)
+            if video_url and video_id is None:
+                st.error("Enter a valid YouTube URL.")
+            elif video_id:
+                st.success("Video ready.")
 
-        if video_id != st.session_state.video_id:
-            reset_video_state(video_url, video_id)
-        else:
-            st.session_state.video_url = video_url
+            if video_id != st.session_state.video_id:
+                reset_video_state(video_url, video_id)
+            else:
+                st.session_state.video_url = video_url
 
         if st.button("Clear current video", use_container_width=True):
             reset_video_state("", None)
