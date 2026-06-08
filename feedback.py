@@ -12,7 +12,9 @@ def get_sheet():
 
 def submit_feedback(message):
     sheet = get_sheet()
-    sheet.append_row([datetime.utcnow().isoformat(), message])
+    dt = datetime.utcnow().isoformat()
+    row = [dt.strftime("%m/%d/%y"), message]
+    sheet.append_row(row)
 
 def get_feedback():
     sheet = get_sheet()
