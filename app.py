@@ -236,40 +236,22 @@ def render_header():
 def render_sidebar():
     with st.sidebar:
         st.header("Video")
-
-        if "pending_url" in st.session_state and st.session_state.pending_url:
-            video_url = st.session_state.pending_url
-            video_id = parse_video_url(video_url)
-
-            if video_url and video_id is None:
-                st.error("Enter a valid YouTube URL.")
-            elif video_id:
-                st.success("Video ready.")
-            
-            reset_video_state(video_url, video_id)
-
-            st.session_state.pending_url = ""
-            st.rerun()
-
         video_url = st.text_input(
             "YouTube URL",
-            key="pending_url",
-            # value=st.session_state.video_url,
-            placeholder="https://www.youtube.com/watch?v=..."
+            value=st.session_state.video_url,
+            placeholder="https://www.youtube.com/watch?v=...",
         )
+		
+		video_id = parse_video_url(video_url)
+		if video_url and video_id is None:
+			st.error("Enter a valid YouTube URL.")
+		elif video_id:
+			st.success("Video ready.")
 
-        if st.button("Submit", use_container_width=True):
-            st.rerun()
-            # video_id = parse_video_url(video_url)
-            # if video_url and video_id is None:
-            #     st.error("Enter a valid YouTube URL.")
-            # elif video_id:
-            #     st.success("Video ready.")
-
-            # if video_id != st.session_state.video_id:
-            #     reset_video_state(video_url, video_id)
-            # else:
-            #     st.session_state.video_url = video_url
+		if video_id != st.session_state.video_id:
+			reset_video_state(video_url, video_id)
+		else:
+			st.session_state.video_url = video_url
 
         if st.button("Clear current video", use_container_width=True):
             reset_video_state("", None)
